@@ -45,3 +45,15 @@ interface FireAndForgetRequestOptionsType {
 interface Config {
     LOG_LEVEL: string;
 }
+
+interface MakeRequestOptions {
+    payload: {
+        [key: string]: any;
+    } | undefined;
+    content_type_uid: any;
+    uid: string;
+    params: {
+        [key: string]: any;
+    };
+    action: string;
+}

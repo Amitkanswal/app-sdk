@@ -2,6 +2,7 @@
 
 import Query from './query';
 import { transform, addParam } from '../utils';
+import { dispatchPostRobotRequest } from "../../utils/adapter";
 
 
 function onData(data: { data: any; }) {
@@ -73,5 +74,18 @@ export default class Base {
     if (!this.constructor.contentTypeUid) { delete options.content_type_uid; }
     return this.constructor.connection.sendToParent('stackQuery', options)
       .then(onData).catch(onError);
+  }
+  api(action: string, payload?: { [key: string]: any }) {
+    const options = {
+      payload,
+      content_type_uid: this.constructor.contentTypeUid,
+      uid: this.uid,
+      params: this._query,
+      action: action || `get${this.constructor.module()}`
+    };
+
+    if (!payload) { delete options.payload; }
+    if (!this.constructor.contentTypeUid) { delete options.content_type_uid; }
+    return dispatchPostRobotRequest(this.constructor.connection, options)
   }
 }
