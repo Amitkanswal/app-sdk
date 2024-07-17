@@ -48,12 +48,18 @@ interface Config {
 
 interface MakeRequestOptions {
     payload: {
-        [key: string]: any;
-    } | undefined;
-    content_type_uid: any;
-    uid: string;
-    params: {
-        [key: string]: any;
-    };
-    action: string;
+        content_type_uid: string;
+        url: URL;
+        method:string;
+        body: unknown;
+        multipart_data:{
+            [key:string]:{
+                type:string;
+                value:unknown;
+            }
+        };
+        headers: {
+            [key: string]: string;
+        }
+    } | undefined
 }

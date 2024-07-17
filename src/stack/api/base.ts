@@ -2,7 +2,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import Query from './query';
 import { transform, addParam } from '../utils';
-import { dispatchPostRobotRequest } from "../../utils/adapter";
+import { dispatchPostRobotRequest } from "../../utils/adapter.ts";
 import { ApiRequestProps } from '../../types/stack.types';
 
 
@@ -77,7 +77,7 @@ export default class Base {
       .then(onData).catch(onError);
   }
 
-  api({payload}:ApiRequestProps) {
+  api(payload:ApiRequestProps) {
     const options = {
       payload : {...payload, "params": this._query, 
         "content_type_uid": this.constructor.contentTypeUid,
