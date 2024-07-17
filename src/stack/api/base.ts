@@ -1,7 +1,9 @@
 //@ts-nocheck
-
+import { v4 as uuidv4 } from 'uuid';
 import Query from './query';
 import { transform, addParam } from '../utils';
+import { dispatchPostRobotRequest } from "../../utils/adapter";
+import { ApiRequestProps } from '../../types/stack.types';
 
 
 function onData(data: { data: any; }) {
@@ -73,5 +75,19 @@ export default class Base {
     if (!this.constructor.contentTypeUid) { delete options.content_type_uid; }
     return this.constructor.connection.sendToParent('stackQuery', options)
       .then(onData).catch(onError);
+  }
+
+  api(payload:ApiRequestProps) {
+    const options = {
+      payload : {...payload, "params": this._query, 
+        "content_type_uid": this.constructor.contentTypeUid,
+        "headers":{...(payload.headers || {}), "X-Request-Id": uuidv4()}
+       },
+    };
+    if (!payload) { delete options.payload; }
+    if (!this.constructor.contentTypeUid) { delete options.payload.content_type_uid; }
+    if (this.uid) options.payload[`${this.constructor.module()}_uid`] = this.uid;
+
+    return dispatchPostRobotRequest(this.constructor.connection, options)
   }
 }
