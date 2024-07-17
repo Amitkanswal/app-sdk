@@ -1,5 +1,5 @@
 //@ts-nocheck
-
+import { v4 as uuidv4 } from 'uuid';
 import Query from './query';
 import { transform, addParam } from '../utils';
 import { dispatchPostRobotRequest } from "../../utils/adapter";
@@ -81,6 +81,7 @@ export default class Base {
     const options = {
       payload : {...payload, "params": this._query, 
         "content_type_uid": this.constructor.contentTypeUid,
+        "headers":{...(payload.headers || {}), "X-Request-Id": uuidv4()}
        },
     };
     if (!payload) { delete options.payload; }
