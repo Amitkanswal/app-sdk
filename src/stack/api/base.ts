@@ -86,7 +86,7 @@ export default class Base {
     };
     if (!payload) { delete options.payload; }
     if (!this.constructor.contentTypeUid) { delete options.payload.content_type_uid; }
-    if (this.uid) options.payload[`${this.constructor.module()}_uid`] = this.uid;
+    if (this.uid) options.payload[`${(this.constructor.module() as string).toLowerCase()}_uid`] = this.uid;
 
     return dispatchPostRobotRequest(this.constructor.connection, options)
   }
