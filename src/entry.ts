@@ -16,6 +16,7 @@ import {
 } from "./types/entry.types";
 import { ContentType, PublishDetails, Schema } from "./types/stack.types";
 import { GenericObjectType } from "./types/common.types";
+import RegisterEvents from './registerEvents';
 
 /** Class representing an entry from Contentstack UI. Not available for Dashboard UI Location.  */
 
@@ -31,6 +32,7 @@ class Entry {
     _emitter: EventEmitter;
     _changedData?: GenericObjectType;
     _options: IEntryOptions;
+    _eventRegistry: RegisterEvents;
 
     constructor(
         initializationData:
@@ -40,6 +42,7 @@ class Entry {
             | IFieldModifierLocationInitData,
         connection: typeof postRobot,
         emitter: EventEmitter,
+        eventRegistry: RegisterEvents,
         options?: IEntryOptions
     ) {
         /**
@@ -49,6 +52,7 @@ class Entry {
         this.content_type = initializationData.content_type;
 
         this._data = initializationData.entry;
+        this._eventRegistry = eventRegistry
 
         if (
             (initializationData as IFieldModifierLocationInitData).changedData
@@ -73,10 +77,12 @@ class Entry {
         const thisEntry = this;
 
         this._emitter.on("entrySave", (event: { data: EntryType }) => {
+            // this.eventRegistry.insertEvent("extensionEvent", "entrySave");
             thisEntry._data = event.data;
         });
 
         this._emitter.on("entryChange", (event: { data: EntryType }) => {
+            // this.eventRegistry.insertEvent("extensionEvent", "entryChange");
             thisEntry._changedData = event.data;
         });
     }
@@ -227,6 +233,7 @@ class Entry {
         const entryObj = this;
         if (callback && typeof callback === "function") {
             entryObj._emitter.on("entrySave", (event: { data: EntryType }) => {
+                this._eventRegistry.insertEvent("extensionEvent", "entrySave");
                 callback(event.data);
             });
         } else {
@@ -242,6 +249,7 @@ class Entry {
     onChange(callback: IOnEntryChangeCallback) {
         const entryObj = this;
         if (callback && typeof callback === "function") {
+            this._eventRegistry.insertEvent("extensionEvent", "entryChange");
             entryObj._emitter.on(
                 "entryChange",
                 (event: {
@@ -264,6 +272,7 @@ class Entry {
     onPublish(callback: (arg0: PublishDetails) => void) {
         const entryObj = this;
         if (callback && typeof callback === "function") {
+            this._eventRegistry.insertEvent("extensionEvent", "entryPublish");
             entryObj._emitter.on(
                 "entryPublish",
                 (event: { data: PublishDetails }) => {
@@ -283,6 +292,7 @@ class Entry {
     onUnPublish(callback: (arg0: PublishDetails) => void) {
         const entryObj = this;
         if (callback && typeof callback === "function") {
+            this._eventRegistry.insertEvent("extensionEvent", "entryUnPublish");
             entryObj._emitter.on(
                 "entryUnPublish",
                 (event: { data: PublishDetails }) => {

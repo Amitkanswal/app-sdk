@@ -11,6 +11,7 @@ import FieldModifierLocationField from "./fieldModifierLocation/field";
 import FieldModifierLocationFrame from "./fieldModifierLocation/frame";
 import Metadata from "./metadata";
 import Modal from "./modal";
+import RegisterEvents from "./registerEvents";
 import Stack from "./stack";
 import Store from "./store";
 import {
@@ -95,6 +96,8 @@ class UiLocation {
      */
     modal: Modal;
 
+    eventRegistry: RegisterEvents;
+
     /**
      * The Contentstack Region on which the app is running.
      */
@@ -139,6 +142,8 @@ class UiLocation {
 
         this.metadata = new Metadata(postRobot);
 
+        this.eventRegistry = new RegisterEvents();
+
         this.config = initializationData.config ?? {};
 
         this.location = {
@@ -182,7 +187,7 @@ class UiLocation {
             }
             case LocationType.WIDGET: {
                 this.location.SidebarWidget = {
-                    entry: new Entry(initializationData, postRobot, emitter),
+                    entry: new Entry(initializationData, postRobot, emitter, this.eventRegistry),
                     stack: new Stack(initializationData.stack, postRobot, {
                         currentBranch: initializationData.currentBranch,
                     }),
@@ -223,7 +228,8 @@ class UiLocation {
                         entry: new Entry(
                             initializationData as IRTEInitData,
                             postRobot,
-                            emitter
+                            emitter,
+                            this.eventRegistry
                         ),
                     };
                 });
@@ -264,7 +270,7 @@ class UiLocation {
                 this.location.CustomField = {
                     field: new Field(initializationData, postRobot, emitter),
                     fieldConfig: initializationData.field_config,
-                    entry: new Entry(initializationData, postRobot, emitter),
+                    entry: new Entry(initializationData, postRobot, emitter,this.eventRegistry),
                     stack: new Stack(initializationData.stack, postRobot, {
                         currentBranch: initializationData.currentBranch,
                     }),
@@ -281,6 +287,7 @@ class UiLocation {
 
         try {
             postRobot.on("extensionEvent", async (event) => {
+                this.eventRegistry.insertEvent("extensionEvent", event.data.name);
                 if (event.data.name === "entrySave") {
                     emitter.emitEvent("entrySave", [{ data: event.data.data }]);
                     emitter.emitEvent("updateFields", [
@@ -345,11 +352,22 @@ class UiLocation {
                         { data: event.data.data },
                     ]);
                 }
+                // this.registeredEvents();
             });
         } catch (err) {
             console.error("Extension Event", err);
         }
     }
+
+    // registeredEvents = () => {
+    //     this.postRobot.sendToParent("registeredEvents", {
+    //         [this.installationUID]: {
+    //             appUID: this.appUID,
+    //             locationUID: this.locationUID,
+    //             registeredEvents: this.eventRegistry.getRegisterEvents()
+    //         }
+    //     });
+    // };
 
     pulse = (eventName: string, metadata: GenericObjectType): void => {
         this.postRobot.sendToParent("analytics", { eventName, metadata });
