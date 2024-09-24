@@ -142,7 +142,16 @@ class UiLocation {
 
         this.metadata = new Metadata(postRobot);
 
-        this.eventRegistry = new RegisterEvents();
+        this.eventRegistry = new RegisterEvents((events) => {
+            console.log("registeredEvents", events);
+            this.postRobot.sendToParent("registeredEvents", {
+                [this.installationUID]: {
+                    appUID: this.appUID,
+                    locationUID: this.locationUID,
+                    registeredEvents: events
+                }
+            });
+        });
 
         this.config = initializationData.config ?? {};
 
@@ -242,7 +251,8 @@ class UiLocation {
                     entry: new FieldModifierLocationEntry(
                         initializationData,
                         postRobot,
-                        emitter
+                        emitter,
+                        this.eventRegistry
                     ),
                     stack: new Stack(initializationData.stack, postRobot, {
                         currentBranch: initializationData.currentBranch,
@@ -358,16 +368,6 @@ class UiLocation {
             console.error("Extension Event", err);
         }
     }
-
-    // registeredEvents = () => {
-    //     this.postRobot.sendToParent("registeredEvents", {
-    //         [this.installationUID]: {
-    //             appUID: this.appUID,
-    //             locationUID: this.locationUID,
-    //             registeredEvents: this.eventRegistry.getRegisterEvents()
-    //         }
-    //     });
-    // };
 
     pulse = (eventName: string, metadata: GenericObjectType): void => {
         this.postRobot.sendToParent("analytics", { eventName, metadata });

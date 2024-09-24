@@ -11,9 +11,9 @@ class FieldModifierLocationEntry extends Entry {
     constructor(
         initializationData: IFieldModifierLocationInitData,
         connection: typeof postRobot,
-        emitter: EventEmitter
+        emitter: EventEmitter,
+        eventRegistry: RegisterEvents
     ) {
-        const eventRegistry = new RegisterEvents();
         super(initializationData, connection, emitter,eventRegistry ,{
             _internalFlags: {
                 FieldInstance: Field as any,

@@ -4,12 +4,14 @@ import { IFieldModifierLocationInitData, LocationType } from "../../src/types";
 import generateErrorMessages, {
     ERROR_MESSAGES,
 } from "../../src/utils/errorMessages";
+import RegisterEvents from '../../src/registerEvents';
 
 describe("FieldModifierLocationEntry", () => {
     let entryInstance: FieldModifierLocationEntry;
     let sendToParent: any;
     let connection: { sendToParent: (...props: any[]) => any };
-
+    const eventRegistry = new RegisterEvents(()=>{});
+    
     let emitter: any;
     function getEntryInitialData(): IFieldModifierLocationInitData {
         return {
@@ -93,7 +95,8 @@ describe("FieldModifierLocationEntry", () => {
         entryInstance = new FieldModifierLocationEntry(
             entryIntialData,
             connection as any,
-            emitter
+            emitter,
+            eventRegistry
         );
     });
 

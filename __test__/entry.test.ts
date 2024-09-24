@@ -9,6 +9,7 @@ describe("Entry", () => {
     let emitter: any;
     let entry: Entry;
     let sendToParent: any;
+    const eventRegistry = new RegisterEvents(()=>{})
 
     beforeEach(() => {
         sendToParent = () => {};
@@ -29,7 +30,7 @@ describe("Entry", () => {
         jest.spyOn(emitter, "on");
 
         const changedData = JSON.parse(JSON.stringify(testData));
-        const eventRegistry = new RegisterEvents()
+        
         changedData.entry.title = "changed title";
 
         entry = new Entry(
@@ -137,7 +138,6 @@ describe("Entry", () => {
         });
         it("should use custom Field instance if internal flag is set", () => {
             const fieldInstance: any = jest.fn();
-            const eventRegistry = new RegisterEvents();
             entry = new Entry(testData as any, connection as any, emitter,eventRegistry ,{
                 _internalFlags: {
                     FieldInstance: fieldInstance,
@@ -176,7 +176,6 @@ describe("Entry", () => {
     it("getField within Create page", function () {
         const dataWithoutEntry = JSON.parse(JSON.stringify(testData));
         dataWithoutEntry.entry = {};
-        const eventRegistry = new RegisterEvents();
         entry = new Entry(dataWithoutEntry, connection as any, emitter, eventRegistry);
         expect(() => entry.getField("invaliduid")).toThrowError(
             "The data is unsaved. Save the data before requesting the field."
