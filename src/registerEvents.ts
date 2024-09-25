@@ -45,7 +45,12 @@ class RegisterEvents {
         const serializedEvents = Object.fromEntries(
             Object.entries(events).map(([key, value]) => [key, Array.from(value)])
         );
-
+        console.log(`Serialized events: ${JSON.stringify(serializedEvents)}`);
+        console.log("this.event value", this.events);
+        console.log("this.eventSubject value", this.eventsSubject);
+        
+        
+        
         this._connection.sendToParent("registeredEvents", {
             [this.installationUID]: {
                 appUID: this.appUID,
