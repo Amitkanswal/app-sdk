@@ -1,4 +1,5 @@
 import postRobot from "post-robot";
+
 class RegisterEvents {
     private events: { [key: string]: Set<string> } = {};
     _connection: typeof postRobot;
@@ -28,22 +29,20 @@ class RegisterEvents {
     private createObservable(payload: { [key: string]: Set<string> }) {
         return new Proxy(payload, {
             set: (target, property, value) => {
+                console.log(`Setting property ${property.toString()} to ${value}`);
                 if (typeof property === "string") {
-                    target[property as string] = value;
-                    console.log("target",target);
-                    console.log("property",property);
-                    console.log("value",value);
-                    
-                    this.debouncedOnChange(target, "set");
+                    target[property] = value;
+                    this.onChange(target, "set");
                 }
                 return true;
             },
             deleteProperty: (target, property) => {
+                console.log(`Deleting property ${property.toString()}`);
                 if (property in target) {
                     if (typeof property === "string") {
                         delete target[property];
                     }
-                    this.debouncedOnChange(target, "delete");
+                    this.onChange(target, "delete");
                 }
                 return true;
             },
@@ -51,43 +50,36 @@ class RegisterEvents {
     }
 
     private onChange(events: { [key: string]: Set<string> }, action: string) {
-        console.log("events",events);
-        console.log("this.events", this.events);
-        
+        console.log(`onChange called with action: ${action}`);
+        console.log(`Current events: ${JSON.stringify(events)}`);
         this._connection.sendToParent("registeredEvents", {
             [this.installationUID]: {
                 appUID: this.appUID,
                 locationUID: this.locationUID,
-                registeredEvents: this.events,
+                registeredEvents: events,
                 action,
             },
         });
     }
 
-    private debouncedOnChange = this.debounce(this.onChange.bind(this), 300);
-
-    private debounce(callbackFunction: (...args: any[]) => void, wait: number) {
-        return (...args: any[]) => {
-            clearTimeout(this.debounceTimeout);
-            this.debounceTimeout = window.setTimeout(() => callbackFunction(...args), wait);
-        };
+    private debouncedOnChange(events: { [key: string]: Set<string> }, action: string) {
+        clearTimeout(this.debounceTimeout);
+        this.debounceTimeout = window.setTimeout(() => {
+            this.onChange(events, action);
+        }, 300); // Adjust the debounce delay as needed
     }
 
     insertEvent(eventName: string, eventType: string) {
-        console.log("eventName",eventName);
-        console.log("eventType",eventType);
-        
+        console.log("insertEvent called with eventName:", eventName, "eventType:", eventType);
+
         if (!this.events[eventName]) {
             this.events[eventName] = new Set();
         }
 
-        // const prevLength = this.events[eventName]?.size;
         this.events[eventName].add(eventType);
-        // if (this.events[eventName].size !== prevLength) {
-            this.debouncedOnChange(this.events, "insert");
-        // }
-        console.log("event",this.events);
-        
+        this.debouncedOnChange(this.events, "insert");
+
+        console.log("Current events after insert:", this.events);
     }
 
     hasEvent(eventName: string, eventType: string) {
@@ -95,6 +87,8 @@ class RegisterEvents {
     }
 
     removeEvent(eventName: string, eventType: string) {
+        console.log("removeEvent called with eventName:", eventName, "eventType:", eventType);
+
         if (this.events[eventName]) {
             const prevSize = this.events[eventName].size;
             this.events[eventName].delete(eventType);
@@ -102,13 +96,20 @@ class RegisterEvents {
                 if (this.events[eventName].size === 0) {
                     delete this.events[eventName];
                 }
-                this.debouncedOnChange(this.events, "remove");
+                this.onChange(this.events, "remove");
             }
         }
+
+        console.log("Current events after remove:", this.events);
     }
 
     getRegisterEvents() {
         return this.events;
+    }
+
+    // Method to retrieve values from the proxy object
+    getEventTypes(eventName: string): Set<string> | undefined {
+        return this.events[eventName];
     }
 }
 
