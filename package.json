@@ -12,6 +12,7 @@
         "test:watch": "jest --watchAll",
         "test:coverage": "jest --coverage --coverageDirectory=\"coverage\"",
         "dev": "webpack --watch --mode development",
+        "dev:build": "npm run build && cp -r dist ../../marketplace-app-boilerplate/node_modules/@contentstack/app-sdk/dist",
         "lint": "eslint . --ext .ts --max-warnings=0",
         "docs": "typedoc",
         "prettier": "npx prettier src --check",

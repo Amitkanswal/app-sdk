@@ -77,12 +77,10 @@ class Entry {
         const thisEntry = this;
 
         this._emitter.on("entrySave", (event: { data: EntryType }) => {
-            // this.eventRegistry.insertEvent("extensionEvent", "entrySave");
             thisEntry._data = event.data;
         });
 
         this._emitter.on("entryChange", (event: { data: EntryType }) => {
-            // this.eventRegistry.insertEvent("extensionEvent", "entryChange");
             thisEntry._changedData = event.data;
         });
     }
@@ -232,8 +230,8 @@ class Entry {
     onSave(callback: (arg0: EntryType) => void) {
         const entryObj = this;
         if (callback && typeof callback === "function") {
+            this._eventRegistry.insertEvent("extensionEvent", "entrySave");
             entryObj._emitter.on("entrySave", (event: { data: EntryType }) => {
-                this._eventRegistry.insertEvent("extensionEvent", "entrySave");
                 callback(event.data);
             });
         } else {

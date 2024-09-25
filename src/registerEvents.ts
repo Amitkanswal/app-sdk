@@ -28,10 +28,10 @@ class RegisterEvents {
     private createObservable(payload: { [key: string]: Set<string> }) {
         return new Proxy(payload, {
             set: (target, property, value) => {
-                if (typeof property === "string") {
-                    target[property] = value;
-                    this.debouncedOnChange(target, "set");
-                }
+                // if (typeof property === "string") {
+                    // target[property as string] = value;
+                    this.onChange(target, "set");
+                // }
                 return true;
             },
             deleteProperty: (target, property) => {
@@ -39,7 +39,7 @@ class RegisterEvents {
                     if (typeof property === "string") {
                         delete target[property];
                     }
-                    this.debouncedOnChange(target, "delete");
+                    this.onChange(target, "delete");
                 }
                 return true;
             },
@@ -51,31 +51,36 @@ class RegisterEvents {
             [this.installationUID]: {
                 appUID: this.appUID,
                 locationUID: this.locationUID,
-                registeredEvents: events,
+                // registeredEvents: this.events,
                 action,
             },
         });
     }
 
-    private debouncedOnChange = this.debounce(this.onChange.bind(this), 300);
+    // private debouncedOnChange = this.debounce(this.onChange.bind(this), 300);
 
-    private debounce(callbackFunction: (...args: any[]) => void, wait: number) {
-        return (...args: any[]) => {
-            clearTimeout(this.debounceTimeout);
-            this.debounceTimeout = window.setTimeout(() => callbackFunction(...args), wait);
-        };
-    }
+    // private debounce(callbackFunction: (...args: any[]) => void, wait: number) {
+    //     return (...args: any[]) => {
+    //         clearTimeout(this.debounceTimeout);
+    //         this.debounceTimeout = window.setTimeout(() => callbackFunction(...args), wait);
+    //     };
+    // }
 
     insertEvent(eventName: string, eventType: string) {
+        console.log("eventName",eventName);
+        console.log("eventType",eventType);
+        
         if (!this.events[eventName]) {
             this.events[eventName] = new Set();
         }
 
         const prevLength = this.events[eventName].size;
         this.events[eventName].add(eventType);
-        if (this.events[eventName].size !== prevLength) {
-            this.debouncedOnChange(this.events, "insert");
-        }
+        // if (this.events[eventName].size !== prevLength) {
+            this.onChange(this.events, "insert");
+        // }
+        console.log("event",this.events);
+        
     }
 
     hasEvent(eventName: string, eventType: string) {
@@ -90,7 +95,7 @@ class RegisterEvents {
                 if (this.events[eventName].size === 0) {
                     delete this.events[eventName];
                 }
-                this.debouncedOnChange(this.events, "remove");
+                this.onChange(this.events, "remove");
             }
         }
     }
