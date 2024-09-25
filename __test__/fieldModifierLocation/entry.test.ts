@@ -1,3 +1,4 @@
+import postRobot from 'post-robot';
 import FieldModifierLocationEntry from "../../src/fieldModifierLocation/entry";
 import testData from "../data/testData.json";
 import { IFieldModifierLocationInitData, LocationType } from "../../src/types";
@@ -10,7 +11,7 @@ describe("FieldModifierLocationEntry", () => {
     let entryInstance: FieldModifierLocationEntry;
     let sendToParent: any;
     let connection: { sendToParent: (...props: any[]) => any };
-    const eventRegistry = new RegisterEvents(()=>{});
+    const eventRegistry = new RegisterEvents({connection: postRobot,installationUID:"", appUID:"", locationUID:""});
     
     let emitter: any;
     function getEntryInitialData(): IFieldModifierLocationInitData {

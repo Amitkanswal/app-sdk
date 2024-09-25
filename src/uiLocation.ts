@@ -142,15 +142,11 @@ class UiLocation {
 
         this.metadata = new Metadata(postRobot);
 
-        this.eventRegistry = new RegisterEvents((events) => {
-            console.log("registeredEvents", events);
-            this.postRobot.sendToParent("registeredEvents", {
-                [this.installationUID]: {
-                    appUID: this.appUID,
-                    locationUID: this.locationUID,
-                    registeredEvents: events
-                }
-            });
+        this.eventRegistry = new RegisterEvents({
+            connection: this.postRobot,
+            installationUID: this.installationUID,
+            appUID: this.appUID,
+            locationUID: this.locationUID,
         });
 
         this.config = initializationData.config ?? {};
@@ -196,7 +192,12 @@ class UiLocation {
             }
             case LocationType.WIDGET: {
                 this.location.SidebarWidget = {
-                    entry: new Entry(initializationData, postRobot, emitter, this.eventRegistry),
+                    entry: new Entry(
+                        initializationData,
+                        postRobot,
+                        emitter,
+                        this.eventRegistry
+                    ),
                     stack: new Stack(initializationData.stack, postRobot, {
                         currentBranch: initializationData.currentBranch,
                     }),
@@ -280,7 +281,12 @@ class UiLocation {
                 this.location.CustomField = {
                     field: new Field(initializationData, postRobot, emitter),
                     fieldConfig: initializationData.field_config,
-                    entry: new Entry(initializationData, postRobot, emitter,this.eventRegistry),
+                    entry: new Entry(
+                        initializationData,
+                        postRobot,
+                        emitter,
+                        this.eventRegistry
+                    ),
                     stack: new Stack(initializationData.stack, postRobot, {
                         currentBranch: initializationData.currentBranch,
                     }),
@@ -297,7 +303,10 @@ class UiLocation {
 
         try {
             postRobot.on("extensionEvent", async (event) => {
-                this.eventRegistry.insertEvent("extensionEvent", event.data.name);
+                this.eventRegistry.insertEvent(
+                    "extensionEvent",
+                    event.data.name
+                );
                 if (event.data.name === "entrySave") {
                     emitter.emitEvent("entrySave", [{ data: event.data.data }]);
                     emitter.emitEvent("updateFields", [

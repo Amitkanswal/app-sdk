@@ -1,6 +1,6 @@
+import postRobot from "post-robot";
 import Entry from "../src/entry";
 import RegisterEvents from '../src/registerEvents';
-import { GenericObjectType } from "../src/types/common.types";
 import testData from "./data/testData.json";
 import { jest } from "@jest/globals";
 
@@ -9,7 +9,7 @@ describe("Entry", () => {
     let emitter: any;
     let entry: Entry;
     let sendToParent: any;
-    const eventRegistry = new RegisterEvents(()=>{})
+    const eventRegistry = new RegisterEvents({connection: postRobot,installationUID:"", appUID:"", locationUID:""})
 
     beforeEach(() => {
         sendToParent = () => {};

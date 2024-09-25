@@ -1,52 +1,85 @@
+import postRobot from "post-robot";
+
 class RegisterEvents {
     private events: { [key: string]: Set<string> } = {};
-    private onChangeCallback: (events: { [key: string]: Set<string> }, action:string ) => void;
+    _connection: typeof postRobot;
+    installationUID: string;
+    appUID: string;
+    locationUID: string;
+    private debounceTimeout: number | undefined;
 
-    constructor(onChangeCallback: (events: { [key: string]: Set<string> }, action:string) => void) {
-        this.onChangeCallback = onChangeCallback;
-        this.events = this.createObservable(this.events, this.onChangeCallback);
+    constructor({
+        connection,
+        installationUID,
+        appUID,
+        locationUID,
+    }: {
+        connection: typeof postRobot;
+        installationUID: string;
+        appUID: string;
+        locationUID: string;
+    }) {
+        this.events = this.createObservable(this.events);
+        this._connection = connection;
+        this.installationUID = installationUID;
+        this.appUID = appUID;
+        this.locationUID = locationUID;
     }
 
     // Function to create a proxy with change detection
-    private createObservable(payload, onChange) {
+    private createObservable(payload) {
         return new Proxy(payload, {
-            set(target, property, value) {
-                const oldValue = target[property];
+            set: (target, property, value) => {
                 target[property] = value;
-
-                // Call the onChange function with details of the change
-                onChange(property as string, value, 'set');
+                this.debouncedOnChange(this.events, "set");
                 return true;
             },
-            deleteProperty(target, property) {
-                const oldValue = target[property];
+            deleteProperty: (target, property) => {
                 delete target[property];
-
-                // Call the onChange function with details of the change
-                onChange(property as string, oldValue, 'delete');
+                this.debouncedOnChange(this.events, "delete");
                 return true;
             }
         });
     }
 
-       insertEvent(eventName: string, eventType: string) {
+    private onChange(events: { [key: string]: Set<string> }, action: string) {
+        this._connection.sendToParent("registeredEvents", {
+            [this.installationUID]: {
+                appUID: this.appUID,
+                locationUID: this.locationUID,
+                registeredEvents: events,
+                action,
+            },
+        });
+    }
+
+    private debouncedOnChange = this.debounce(this.onChange.bind(this), 300);
+
+    private debounce(callbackFunction: (...args: any[]) => void, wait: number) {
+        return (...args: any[]) => {
+            clearTimeout(this.debounceTimeout);
+            this.debounceTimeout = window.setTimeout(() => callbackFunction(...args), wait);
+        };
+    }
+
+    insertEvent(eventName: string, eventType: string) {
         if (this.events[eventName]) {
             if (this.events[eventName] instanceof Set) {
                 const prevLength = this.events[eventName].size;
                 this.events[eventName].add(eventType);
                 if (prevLength !== this.events[eventName].size) {
-                    this.onChangeCallback(this.events, 'insert');
+                    this.debouncedOnChange(this.events, 'insert');
                 }
             } else {
                 const existingEventType = this.events[eventName] as unknown as string;
                 this.events[eventName] = new Set([existingEventType, eventType]);
                 if (this.events[eventName].size === 2) {
-                    this.onChangeCallback(this.events, 'insert');
+                    this.debouncedOnChange(this.events, 'insert');
                 }
             }
         } else {
             this.events[eventName] = new Set([eventType]);
-            this.onChangeCallback(this.events, 'insert');
+            this.debouncedOnChange(this.events, 'insert');
         }
     }
 
@@ -60,7 +93,7 @@ class RegisterEvents {
             if (this.events[eventName].size === 0) {
                 delete this.events[eventName];
             }
-            this.onChangeCallback(this.events, 'remove');
+            this.debouncedOnChange(this.events, 'remove');
         }
     }
 
