@@ -5,14 +5,16 @@ import { IFieldModifierLocationInitData } from "../types";
 import { IGetTagsOptions } from "../types/entry.types";
 import generateErrorMessages, { ERROR_MESSAGES } from "../utils/errorMessages";
 import Field from "./field";
+import RegisterEvents from '../registerEvents';
 
 class FieldModifierLocationEntry extends Entry {
     constructor(
         initializationData: IFieldModifierLocationInitData,
         connection: typeof postRobot,
-        emitter: EventEmitter
+        emitter: EventEmitter,
+        eventRegistry: RegisterEvents
     ) {
-        super(initializationData, connection, emitter, {
+        super(initializationData, connection, emitter,eventRegistry ,{
             _internalFlags: {
                 FieldInstance: Field as any,
             },

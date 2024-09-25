@@ -1,5 +1,6 @@
+import postRobot from "post-robot";
 import Entry from "../src/entry";
-import { GenericObjectType } from "../src/types/common.types";
+import RegisterEvents from '../src/registerEvents';
 import testData from "./data/testData.json";
 import { jest } from "@jest/globals";
 
@@ -8,6 +9,7 @@ describe("Entry", () => {
     let emitter: any;
     let entry: Entry;
     let sendToParent: any;
+    const eventRegistry = new RegisterEvents({connection: postRobot,installationUID:"", appUID:"", locationUID:""})
 
     beforeEach(() => {
         sendToParent = () => {};
@@ -28,12 +30,14 @@ describe("Entry", () => {
         jest.spyOn(emitter, "on");
 
         const changedData = JSON.parse(JSON.stringify(testData));
+        
         changedData.entry.title = "changed title";
 
         entry = new Entry(
             { ...testData, changedData } as any,
             connection as any,
-            emitter
+            emitter,
+            eventRegistry
         );
     });
 
@@ -134,7 +138,7 @@ describe("Entry", () => {
         });
         it("should use custom Field instance if internal flag is set", () => {
             const fieldInstance: any = jest.fn();
-            entry = new Entry(testData as any, connection as any, emitter, {
+            entry = new Entry(testData as any, connection as any, emitter,eventRegistry ,{
                 _internalFlags: {
                     FieldInstance: fieldInstance,
                 },
@@ -172,7 +176,7 @@ describe("Entry", () => {
     it("getField within Create page", function () {
         const dataWithoutEntry = JSON.parse(JSON.stringify(testData));
         dataWithoutEntry.entry = {};
-        entry = new Entry(dataWithoutEntry, connection as any, emitter);
+        entry = new Entry(dataWithoutEntry, connection as any, emitter, eventRegistry);
         expect(() => entry.getField("invaliduid")).toThrowError(
             "The data is unsaved. Save the data before requesting the field."
         );

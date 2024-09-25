@@ -1,6 +1,6 @@
 {
     "name": "@contentstack/app-sdk",
-    "version": "2.0.3",
+    "version": "2.0.4",
     "types": "dist/src/index.d.ts",
     "description": "The Contentstack App SDK allows you to customize your Contentstack applications.",
     "main": "dist/index.js",
@@ -12,6 +12,7 @@
         "test:watch": "jest --watchAll",
         "test:coverage": "jest --coverage --coverageDirectory=\"coverage\"",
         "dev": "webpack --watch --mode development",
+        "dev:build": "npm run build && cp -r dist ../../marketplace-app-boilerplate/node_modules/@contentstack/app-sdk/dist",
         "lint": "eslint . --ext .ts --max-warnings=0",
         "docs": "typedoc",
         "prettier": "npx prettier src --check",
