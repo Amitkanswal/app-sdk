@@ -51,7 +51,7 @@ class RegisterEvents {
             [this.installationUID]: {
                 appUID: this.appUID,
                 locationUID: this.locationUID,
-                // registeredEvents: this.events,
+                registeredEvents: this.events,
                 action,
             },
         });
@@ -74,7 +74,7 @@ class RegisterEvents {
             this.events[eventName] = new Set();
         }
 
-        const prevLength = this.events[eventName].size;
+        // const prevLength = this.events[eventName]?.size;
         this.events[eventName].add(eventType);
         // if (this.events[eventName].size !== prevLength) {
             this.onChange(this.events, "insert");
