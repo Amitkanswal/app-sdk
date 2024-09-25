@@ -27,9 +27,12 @@ class RegisterEvents {
         this.locationUID = locationUID;
 
         // Subscribe to the eventsSubject to handle changes
-        this.eventsSubject.subscribe(({ events, action }) => {
+        this.eventsSubject.subscribe({next:({ events, action }) => {
+            console.log("eventsSubject called with action:", action);
+            console.log("Current events:", events);
+            
             this.onChange(events, action);
-        });
+        }});
     }
 
     private onChange(events: { [key: string]: Set<string> }, action: string) {
