@@ -48,12 +48,12 @@ class RegisterEvents {
         });
     }
 
-    private debouncedOnChange(events: { [key: string]: Set<string> }, action: string) {
-        clearTimeout(this.debounceTimeout);
-        this.debounceTimeout = window.setTimeout(() => {
-            this.eventsSubject.next({ events, action });
-        }, 300); // Adjust the debounce delay as needed
-    }
+    // private debouncedOnChange(events: { [key: string]: Set<string> }, action: string) {
+    //     clearTimeout(this.debounceTimeout);
+    //     this.debounceTimeout = window.setTimeout(() => {
+    //         this.eventsSubject.next({ events, action });
+    //     }, 300); // Adjust the debounce delay as needed
+    // }
 
     insertEvent(eventName: string, eventType: string) {
         console.log("insertEvent called with eventName:", eventName, "eventType:", eventType);
@@ -63,7 +63,8 @@ class RegisterEvents {
         }
 
         this.events[eventName].add(eventType);
-        this.debouncedOnChange(this.events, "insert");
+        this.eventsSubject.next({ events:this.events, action:"insert" });
+        // this.debouncedOnChange(this.events, "insert");
 
         console.log("Current events after insert:", this.events);
     }
