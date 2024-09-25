@@ -1,12 +1,11 @@
 import postRobot from "post-robot";
-
 class RegisterEvents {
     private events: { [key: string]: Set<string> } = {};
     _connection: typeof postRobot;
     installationUID: string;
     appUID: string;
     locationUID: string;
-    private debounceTimeout: number | undefined;
+    private debounceTimeout: number = 0;
 
     constructor({
         connection,
@@ -26,19 +25,24 @@ class RegisterEvents {
         this.locationUID = locationUID;
     }
 
-    // Function to create a proxy with change detection
-    private createObservable(payload) {
+    private createObservable(payload: { [key: string]: Set<string> }) {
         return new Proxy(payload, {
             set: (target, property, value) => {
-                target[property] = value;
-                this.debouncedOnChange(this.events, "set");
+                if (typeof property === "string") {
+                    target[property] = value;
+                    this.debouncedOnChange(target, "set");
+                }
                 return true;
             },
             deleteProperty: (target, property) => {
-                delete target[property];
-                this.debouncedOnChange(this.events, "delete");
+                if (property in target) {
+                    if (typeof property === "string") {
+                        delete target[property];
+                    }
+                    this.debouncedOnChange(target, "delete");
+                }
                 return true;
-            }
+            },
         });
     }
 
@@ -63,37 +67,31 @@ class RegisterEvents {
     }
 
     insertEvent(eventName: string, eventType: string) {
-        if (this.events[eventName]) {
-            if (this.events[eventName] instanceof Set) {
-                const prevLength = this.events[eventName].size;
-                this.events[eventName].add(eventType);
-                if (prevLength !== this.events[eventName].size) {
-                    this.debouncedOnChange(this.events, 'insert');
-                }
-            } else {
-                const existingEventType = this.events[eventName] as unknown as string;
-                this.events[eventName] = new Set([existingEventType, eventType]);
-                if (this.events[eventName].size === 2) {
-                    this.debouncedOnChange(this.events, 'insert');
-                }
-            }
-        } else {
-            this.events[eventName] = new Set([eventType]);
-            this.debouncedOnChange(this.events, 'insert');
+        if (!this.events[eventName]) {
+            this.events[eventName] = new Set();
+        }
+
+        const prevLength = this.events[eventName].size;
+        this.events[eventName].add(eventType);
+        if (this.events[eventName].size !== prevLength) {
+            this.debouncedOnChange(this.events, "insert");
         }
     }
 
     hasEvent(eventName: string, eventType: string) {
-        return this.events[eventName] && this.events[eventName].has(eventType);
+        return this.events[eventName]?.has(eventType);
     }
 
     removeEvent(eventName: string, eventType: string) {
         if (this.events[eventName]) {
+            const prevSize = this.events[eventName].size;
             this.events[eventName].delete(eventType);
-            if (this.events[eventName].size === 0) {
-                delete this.events[eventName];
+            if (this.events[eventName].size !== prevSize) {
+                if (this.events[eventName].size === 0) {
+                    delete this.events[eventName];
+                }
+                this.debouncedOnChange(this.events, "remove");
             }
-            this.debouncedOnChange(this.events, 'remove');
         }
     }
 
