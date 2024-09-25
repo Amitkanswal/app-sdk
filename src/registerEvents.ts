@@ -27,33 +27,34 @@ class RegisterEvents {
         this.locationUID = locationUID;
 
         // Subscribe to the eventsSubject to handle changes
-        this.eventsSubject.subscribe({next:({ events, action }) => {
-            console.log("eventsSubject called with action:", action);
-            console.log("Current events:", events);
-            
-            this.onChange(events, action);
-        }});
+        this.eventsSubject.subscribe({
+            next: ({ events, action }) => {
+                console.log("eventsSubject called with action:", action);
+                console.log("Current events:", events);
+                
+                this.onChange(events, action);
+            }
+        });
     }
 
     private onChange(events: { [key: string]: Set<string> }, action: string) {
         console.log(`onChange called with action: ${action}`);
         console.log(`Current events: ${JSON.stringify(events)}`);
+
+        // Convert Set objects to arrays for serialization
+        const serializedEvents = Object.fromEntries(
+            Object.entries(events).map(([key, value]) => [key, Array.from(value)])
+        );
+
         this._connection.sendToParent("registeredEvents", {
             [this.installationUID]: {
                 appUID: this.appUID,
                 locationUID: this.locationUID,
-                registeredEvents: events,
+                registeredEvents: serializedEvents,
                 action,
             },
         });
     }
-
-    // private debouncedOnChange(events: { [key: string]: Set<string> }, action: string) {
-    //     clearTimeout(this.debounceTimeout);
-    //     this.debounceTimeout = window.setTimeout(() => {
-    //         this.eventsSubject.next({ events, action });
-    //     }, 300); // Adjust the debounce delay as needed
-    // }
 
     insertEvent(eventName: string, eventType: string) {
         console.log("insertEvent called with eventName:", eventName, "eventType:", eventType);
@@ -63,8 +64,7 @@ class RegisterEvents {
         }
 
         this.events[eventName].add(eventType);
-        this.eventsSubject.next({ events:this.events, action:"insert" });
-        // this.debouncedOnChange(this.events, "insert");
+        this.eventsSubject.next({ events: this.events, action: "insert" });
 
         console.log("Current events after insert:", this.events);
     }
