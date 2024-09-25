@@ -51,6 +51,9 @@ class RegisterEvents {
     }
 
     private onChange(events: { [key: string]: Set<string> }, action: string) {
+        console.log("events",events);
+        console.log("this.events", this.events);
+        
         this._connection.sendToParent("registeredEvents", {
             [this.installationUID]: {
                 appUID: this.appUID,
