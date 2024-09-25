@@ -28,10 +28,14 @@ class RegisterEvents {
     private createObservable(payload: { [key: string]: Set<string> }) {
         return new Proxy(payload, {
             set: (target, property, value) => {
-                // if (typeof property === "string") {
-                    // target[property as string] = value;
-                    this.onChange(target, "set");
-                // }
+                if (typeof property === "string") {
+                    target[property as string] = value;
+                    console.log("target",target);
+                    console.log("property",property);
+                    console.log("value",value);
+                    
+                    this.debouncedOnChange(target, "set");
+                }
                 return true;
             },
             deleteProperty: (target, property) => {
@@ -39,7 +43,7 @@ class RegisterEvents {
                     if (typeof property === "string") {
                         delete target[property];
                     }
-                    this.onChange(target, "delete");
+                    this.debouncedOnChange(target, "delete");
                 }
                 return true;
             },
@@ -57,14 +61,14 @@ class RegisterEvents {
         });
     }
 
-    // private debouncedOnChange = this.debounce(this.onChange.bind(this), 300);
+    private debouncedOnChange = this.debounce(this.onChange.bind(this), 300);
 
-    // private debounce(callbackFunction: (...args: any[]) => void, wait: number) {
-    //     return (...args: any[]) => {
-    //         clearTimeout(this.debounceTimeout);
-    //         this.debounceTimeout = window.setTimeout(() => callbackFunction(...args), wait);
-    //     };
-    // }
+    private debounce(callbackFunction: (...args: any[]) => void, wait: number) {
+        return (...args: any[]) => {
+            clearTimeout(this.debounceTimeout);
+            this.debounceTimeout = window.setTimeout(() => callbackFunction(...args), wait);
+        };
+    }
 
     insertEvent(eventName: string, eventType: string) {
         console.log("eventName",eventName);
@@ -77,7 +81,7 @@ class RegisterEvents {
         // const prevLength = this.events[eventName]?.size;
         this.events[eventName].add(eventType);
         // if (this.events[eventName].size !== prevLength) {
-            this.onChange(this.events, "insert");
+            this.debouncedOnChange(this.events, "insert");
         // }
         console.log("event",this.events);
         
@@ -95,7 +99,7 @@ class RegisterEvents {
                 if (this.events[eventName].size === 0) {
                     delete this.events[eventName];
                 }
-                this.onChange(this.events, "remove");
+                this.debouncedOnChange(this.events, "remove");
             }
         }
     }
