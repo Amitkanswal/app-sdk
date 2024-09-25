@@ -1,7 +1,9 @@
 import postRobot from "post-robot";
+import { Subject } from "rxjs";
 
 class RegisterEvents {
     private events: { [key: string]: Set<string> } = {};
+    private eventsSubject = new Subject<{ events: { [key: string]: Set<string> }, action: string }>();
     _connection: typeof postRobot;
     installationUID: string;
     appUID: string;
@@ -19,33 +21,14 @@ class RegisterEvents {
         appUID: string;
         locationUID: string;
     }) {
-        this.events = this.createObservable(this.events);
         this._connection = connection;
         this.installationUID = installationUID;
         this.appUID = appUID;
         this.locationUID = locationUID;
-    }
 
-    private createObservable(payload: { [key: string]: Set<string> }) {
-        return new Proxy(payload, {
-            set: (target, property, value) => {
-                console.log(`Setting property ${property.toString()} to ${value}`);
-                if (typeof property === "string") {
-                    target[property] = value;
-                    this.onChange(target, "set");
-                }
-                return true;
-            },
-            deleteProperty: (target, property) => {
-                console.log(`Deleting property ${property.toString()}`);
-                if (property in target) {
-                    if (typeof property === "string") {
-                        delete target[property];
-                    }
-                    this.onChange(target, "delete");
-                }
-                return true;
-            },
+        // Subscribe to the eventsSubject to handle changes
+        this.eventsSubject.subscribe(({ events, action }) => {
+            this.onChange(events, action);
         });
     }
 
@@ -65,7 +48,7 @@ class RegisterEvents {
     private debouncedOnChange(events: { [key: string]: Set<string> }, action: string) {
         clearTimeout(this.debounceTimeout);
         this.debounceTimeout = window.setTimeout(() => {
-            this.onChange(events, action);
+            this.eventsSubject.next({ events, action });
         }, 300); // Adjust the debounce delay as needed
     }
 
@@ -96,7 +79,7 @@ class RegisterEvents {
                 if (this.events[eventName].size === 0) {
                     delete this.events[eventName];
                 }
-                this.onChange(this.events, "remove");
+                this.eventsSubject.next({ events: this.events, action: "remove" });
             }
         }
 
@@ -107,7 +90,7 @@ class RegisterEvents {
         return this.events;
     }
 
-    // Method to retrieve values from the proxy object
+    // Method to retrieve values from the events object
     getEventTypes(eventName: string): Set<string> | undefined {
         return this.events[eventName];
     }
