@@ -55,7 +55,7 @@ class RegisterEvents {
             [this.installationUID]: {
                 appUID: this.appUID,
                 locationUID: this.locationUID,
-                registeredEvents: serializedEvents,
+                registeredEvents: JSON.stringify(serializedEvents),
                 action,
             },
         });
