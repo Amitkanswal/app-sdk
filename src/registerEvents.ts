@@ -67,9 +67,11 @@ class RegisterEvents {
         if (!this.events[eventName]) {
             this.events[eventName] = new Set();
         }
-
-        this.events[eventName].add(eventType);
-        this.eventsSubject.next({ events: this.events, action: "insert" });
+        if (!this.hasEvent(eventName, eventType)) {
+            this.events[eventName].add(eventType);
+            this.eventsSubject.next({ events: this.events, action: "insert" }); 
+        }
+      
 
         console.log("Current events after insert:", this.events);
     }
