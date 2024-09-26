@@ -3,6 +3,7 @@ import postRobot from "post-robot";
 import { IFieldInitData, IFieldModifierLocationInitData } from "./types";
 import { GenericObjectType } from "./types/common.types";
 import { Schema } from "./types/stack.types";
+import RegisterEvents from './registerEvents';
 
 const excludedDataTypesForSetField = [
     "file",
@@ -44,11 +45,13 @@ class Field {
     _resolvedData: GenericObjectType;
     _self: boolean;
     _connection: typeof postRobot;
+    _registerEvents: RegisterEvents;
 
     constructor(
         fieldDataObject: IFieldInitData | IFieldModifierLocationInitData,
         connection: typeof postRobot,
-        emitter: EventEmitter
+        emitter: EventEmitter,
+        registerEvents: RegisterEvents
     ) {
         /**
          * The UID of the current field is defined in the content type of the entry.
@@ -76,10 +79,13 @@ class Field {
 
         this._connection = connection;
 
+        this._registerEvents = registerEvents
+
         this._self = fieldDataObject.self || false;
 
         const fieldObj = this;
-
+        // stackOptionsQuery
+        // this._registerEvents.insertEvent("stackOptionsQuery","updateFields");
         emitter.on("updateFields", (event: GenericObjectType) => {
             const schemaPath =
                 this._self && "$uid" in fieldObj.schema
@@ -127,7 +133,7 @@ class Field {
                 new Error("Cannot call set data for current field type")
             );
         }
-
+        this._registerEvents.insertEvent("root","setData");
         return this._connection
             .sendToParent("setData", dataObj)
             .then(() => {
@@ -154,6 +160,7 @@ class Field {
      * @return {Promise<void>} A promise object which is resolved when Contentstack UI returns an acknowledgement of the focused state.
      */
     async setFocus(): Promise<void> {
+        this._registerEvents.insertEvent("root","focus");
         await this._connection.sendToParent("focus");
     }
 
@@ -165,6 +172,7 @@ class Field {
     onChange?(callback: (data: any) => any) {
         const fieldObj = this;
         if (callback && typeof callback === "function") {
+            this._registerEvents.insertEvent("field","extensionFieldChange");
             fieldObj._emitter.on("extensionFieldChange", (event: any) => {
                 this._data = event.data;
                 this._resolvedData = event.data;

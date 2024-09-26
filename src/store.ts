@@ -1,3 +1,4 @@
+import RegisterEvents from './registerEvents';
 import { GenericObjectType } from "./types/common.types";
 import { onError } from "./utils/utils";
 import postRobot from "post-robot";
@@ -8,9 +9,11 @@ import postRobot from "post-robot";
  */
 class Store {
     _connection: typeof postRobot;
+    _registeredEvents: RegisterEvents;
 
-    constructor(connection: typeof postRobot) {
+    constructor(connection: typeof postRobot, registerEvents: RegisterEvents) {
         this._connection = connection;
+        this._registeredEvents = registerEvents;
     }
 
     /**
@@ -24,6 +27,7 @@ class Store {
         if (!key || typeof key !== "string") {
             throw new Error("Kindly provide valid parameters");
         }
+        this._registeredEvents.insertEvent("store", "get");
         return this._connection
             .sendToParent("store", { action: "get", key })
             .then((event: { data: GenericObjectType }) =>
@@ -38,6 +42,7 @@ class Store {
      * @return {Promise<GenericObjectType>} A Promise that resolves with the stored key-value pairs as an object.
      */
     getAll(): Promise<GenericObjectType> {
+        this._registeredEvents.insertEvent("store", "getAll");
         return this._connection
             .sendToParent("store", { action: "getAll" })
             .then(({ data = {} }) => Promise.resolve(data))
@@ -55,6 +60,7 @@ class Store {
         if (!key || !value || typeof key !== "string") {
             throw new Error("Kindly provide valid parameters");
         }
+        this._registeredEvents.insertEvent("store", "set");
         return this._connection
             .sendToParent("store", { action: "set", key, value })
             .then(() => Promise.resolve(true))
@@ -71,6 +77,7 @@ class Store {
         if (!key || typeof key !== "string") {
             throw new Error("Kindly provide valid parameters");
         }
+        this._registeredEvents.insertEvent("store", "remove");
         return this._connection
             .sendToParent("store", { action: "remove", key })
             .then(() => Promise.resolve(true))
@@ -83,6 +90,7 @@ class Store {
      * @returns {Promise<boolean>} A Promise that resolves with the success status (true when all values are cleared successfully).
      */
     clear(): Promise<boolean> {
+        this._registeredEvents.insertEvent("store", "clear");
         return this._connection
             .sendToParent("store", { action: "clear" })
             .then(() => Promise.resolve(true))

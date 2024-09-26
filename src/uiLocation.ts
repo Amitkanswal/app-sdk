@@ -134,20 +134,21 @@ class UiLocation {
 
         this.type = initializationData.type;
 
-        this.store = new Store(postRobot);
-
-        this.stack = new Stack(initializationData.stack, postRobot, {
-            currentBranch: initializationData.currentBranch,
-        });
-
-        this.metadata = new Metadata(postRobot);
-
         this.eventRegistry = new RegisterEvents({
             connection: this.postRobot,
             installationUID: this.installationUID,
             appUID: this.appUID,
             locationUID: this.locationUID,
         });
+
+        this.store = new Store(postRobot, this.eventRegistry);
+
+        this.stack = new Stack(initializationData.stack, postRobot,this.eventRegistry, {
+            currentBranch: initializationData.currentBranch,
+        });
+
+        this.metadata = new Metadata(postRobot, this.eventRegistry);
+
 
         this.config = initializationData.config ?? {};
 
@@ -169,7 +170,7 @@ class UiLocation {
 
         this.region = formatAppRegion(initializationData.region);
 
-        const stack = new Stack(initializationData.stack, postRobot, {
+        const stack = new Stack(initializationData.stack, postRobot, this.eventRegistry, {
             currentBranch: initializationData.currentBranch,
         });
 
@@ -184,7 +185,7 @@ class UiLocation {
                         emitter,
                         initializationData.dashboard_width
                     ),
-                    stack: new Stack(initializationData.stack, postRobot, {
+                    stack: new Stack(initializationData.stack, postRobot, this.eventRegistry, {
                         currentBranch: initializationData.currentBranch,
                     }),
                 };
@@ -198,7 +199,7 @@ class UiLocation {
                         emitter,
                         this.eventRegistry
                     ),
-                    stack: new Stack(initializationData.stack, postRobot, {
+                    stack: new Stack(initializationData.stack, postRobot,this.eventRegistry, {
                         currentBranch: initializationData.currentBranch,
                     }),
                 };
@@ -211,11 +212,12 @@ class UiLocation {
                         initializationData,
                         postRobot,
                         emitter,
+                        this.eventRegistry,
                         {
                             currentBranch: initializationData.currentBranch,
                         }
                     ),
-                    stack: new Stack(initializationData.stack, postRobot, {
+                    stack: new Stack(initializationData.stack, postRobot, this.eventRegistry, {
                         currentBranch: initializationData.currentBranch,
                     }),
                 };
@@ -226,7 +228,8 @@ class UiLocation {
                 this.location.AssetSidebarWidget = new AssetSidebarWidget(
                     initializationData,
                     postRobot,
-                    emitter
+                    emitter,
+                    this.eventRegistry
                 );
                 break;
             }
@@ -255,7 +258,7 @@ class UiLocation {
                         emitter,
                         this.eventRegistry
                     ),
-                    stack: new Stack(initializationData.stack, postRobot, {
+                    stack: new Stack(initializationData.stack, postRobot, this.eventRegistry, {
                         currentBranch: initializationData.currentBranch,
                     }),
                     field: new FieldModifierLocationField(
@@ -279,7 +282,7 @@ class UiLocation {
             default: {
                 initializationData.self = true;
                 this.location.CustomField = {
-                    field: new Field(initializationData, postRobot, emitter),
+                    field: new Field(initializationData, postRobot, emitter, this.eventRegistry),
                     fieldConfig: initializationData.field_config,
                     entry: new Entry(
                         initializationData,
@@ -287,7 +290,7 @@ class UiLocation {
                         emitter,
                         this.eventRegistry
                     ),
-                    stack: new Stack(initializationData.stack, postRobot, {
+                    stack: new Stack(initializationData.stack, postRobot, this.eventRegistry, {
                         currentBranch: initializationData.currentBranch,
                     }),
                     frame: new Window(
@@ -379,6 +382,7 @@ class UiLocation {
     }
 
     pulse = (eventName: string, metadata: GenericObjectType): void => {
+        this.eventRegistry.insertEvent("root", "analytics");
         this.postRobot.sendToParent("analytics", { eventName, metadata });
     };
 
@@ -389,6 +393,7 @@ class UiLocation {
         if (!this.installationUID) {
             return Promise.resolve(this.config);
         }
+        this.eventRegistry.insertEvent("root", "getConfig");
         return this.postRobot
             .sendToParent("getConfig")
             .then(onData)
@@ -421,10 +426,11 @@ class UiLocation {
             skip_api_key: true,
         };
         const app: Manifest = await this.postRobot
-            .sendToParent<Manifest>("stackQuery", options)
-            .then(onData)
-            .catch(onError);
+        .sendToParent<Manifest>("stackQuery", options)
+        .then(onData)
+        .catch(onError);
         this.version = app.version;
+        this.eventRegistry.insertEvent("stackQuery", "getAppManifest");
         return this.version;
     };
 
@@ -451,6 +457,7 @@ class UiLocation {
     }
 
     setReady(): Promise<ResponseMessageEvent> {
+        this.eventRegistry.insertEvent("root", "ready");
         return this.postRobot.sendToParent("ready");
     }
 }

@@ -4,6 +4,7 @@ import { onData, onError } from "../utils/utils";
 import { BranchDetail, GetAllStacksOptions, StackAdditionalData, StackDetail, StackSearchQuery } from '../types/stack.types';
 import { IManagementTokenDetails } from '../types';
 import { GenericObjectType } from "../types/common.types";
+import RegisterEvents from '../registerEvents';
 
 
 /**
@@ -17,14 +18,16 @@ class Stack {
 
   _connection: any
   _data: StackDetail
+  _registeredEvents: RegisterEvents
   ContentType: any 
   Asset: any 
   private _currentBranch: BranchDetail | null = null;
 
 
-  constructor(data: StackDetail = {} as StackDetail, connection: any, additionalData: StackAdditionalData) {
+  constructor(data: StackDetail = {} as StackDetail, connection: any,registerEvent:RegisterEvents ,additionalData: StackAdditionalData) {
     this._connection = connection;
     this._data = data;
+    this._registeredEvents = registerEvent;
     /**
      * @constructor
      * @hideconstructor
@@ -77,13 +80,15 @@ class Stack {
     if (typeof orgUid !== 'string') {
       throw new TypeError('orgUid must be a string');
     }
-
     const options = {
         action: "getStacks",
         headers: { organization_uid: orgUid || this._data.org_uid },
         skip_api_key: true,
         params
     };
+
+    this._registeredEvents.insertEvent("stackQuery", "getStacks");
+
     return this._connection
       .sendToParent("stackQuery", options)
       .then(onData)
@@ -100,6 +105,7 @@ class Stack {
    */
   async getManagementTokens(): Promise<IManagementTokenDetails[]> {
     const options = { action: "getManagementTokens" };
+    this._registeredEvents.insertEvent("stackQuery", "getManagementTokens");
     return this._connection
         .sendToParent("stackQuery", options)
         .then(async (response) => {
@@ -117,6 +123,7 @@ class Stack {
    */
   search(queries: StackSearchQuery, apiKey: string | null = this._data.api_key) {
     const options = { params: queries, api_key: apiKey, action: "search" };
+    this._registeredEvents.insertEvent("stackQuery", "search");
     return this._connection
       .sendToParent("stackQuery", options)
       .then(onData)
@@ -134,6 +141,7 @@ class Stack {
     if (!uid) {
       return Promise.reject(new Error('uid is required'));
     }
+    this._registeredEvents.insertEvent("stackQuery", "getContentTypes");
     const options = { uid, params, action: 'getContentType' };
     return this._connection.sendToParent('stackQuery', options).then(onData).catch(onError);
   }
@@ -147,6 +155,7 @@ class Stack {
   getContentTypes(query = {}, params: { [key: string]: any } = {}): Promise<{ [key: string]: any }> {
     const optionParams = params;
     optionParams.query = query;
+    this._registeredEvents.insertEvent("stackQuery", "getContentTypes");
     const options = { params: optionParams, action: 'getContentTypes' };
     return this._connection.sendToParent('stackQuery', options).then(onData).catch(onError);
   }
@@ -161,6 +170,7 @@ class Stack {
     if (!name) {
       return Promise.reject(new Error('name is required'));
     }
+    this._registeredEvents.insertEvent("stackQuery", "getEnvironment");
     const options = { name, params, action: 'getEnvironment' };
     return this._connection.sendToParent('stackQuery', options).then(onData).catch(onError);
   }
@@ -174,6 +184,7 @@ class Stack {
   getEnvironments(query = {}, params = {}) {
     const optionParams: { [key: string]: any } = params;
     optionParams.query = query;
+    this._registeredEvents.insertEvent("stackQuery", "getEnvironments");
     const options = { params: optionParams, action: 'getEnvironments' };
     return this._connection.sendToParent('stackQuery', options).then(onData).catch(onError);
   }
@@ -187,6 +198,7 @@ class Stack {
   getReleases(query = {}, params = {}) {
     const optionParams: { [key: string]: any } = params;
     optionParams.query = query;
+    this._registeredEvents.insertEvent("stackQuery", "getReleases");
     const options = { params: optionParams, action: 'getReleases' };
     return this._connection.sendToParent('stackQuery', options).then(onData).catch(onError);
   }
@@ -200,6 +212,7 @@ class Stack {
   getPublishes(query = {}, params = {}) {
     const optionParams: { [key: string]: any } = params;
     optionParams.query = query;
+    this._registeredEvents.insertEvent("stackQuery", "getPublishes");
     const options = { params: optionParams, action: 'getPublishes' };
     return this._connection.sendToParent('stackQuery', options).then(onData).catch(onError);
   }
@@ -214,6 +227,7 @@ class Stack {
     if (!code) {
       return Promise.reject(new Error('code is required'));
     }
+    this._registeredEvents.insertEvent("stackQuery", "getLocale");
     const options = { code, params, action: 'getLocale' };
     return this._connection.sendToParent('stackQuery', options).then(onData).catch(onError);
   }
@@ -227,6 +241,7 @@ class Stack {
   getLocales(query = {}, params = {}) {
     const optionParams: { [key: string]: any } = params;
     optionParams.query = query;
+    this._registeredEvents.insertEvent("stackQuery", "getLocales");
     const options = { params: optionParams, action: 'getLocales' };
     return this._connection.sendToParent('stackQuery', options).then(onData).catch(onError);
   }
@@ -241,6 +256,7 @@ class Stack {
       if (!uid) {
         return Promise.reject(new Error('workflow uid is required'));
       }
+      this._registeredEvents.insertEvent("stackQuery", "getWorkflow");
       const options = { uid, params, action: 'getWorkflow' };
       return this._connection.sendToParent('stackQuery', options).then(onData).catch(onError);
     }
@@ -254,6 +270,7 @@ class Stack {
     getWorkflows(query = {}, params = {}) {
       const optionParams: { [key: string]: any } = params;
       optionParams.query = query;
+      this._registeredEvents.insertEvent("stackQuery", "getWorkflows");
       const options = { params: optionParams, action: 'getWorkflows' };
       return this._connection.sendToParent('stackQuery', options).then(onData).catch(onError);
     }
@@ -282,6 +299,7 @@ class Stack {
       if (!variant_uid) {
         return Promise.reject(new Error('variant uid is required'));
       }
+      this._registeredEvents.insertEvent("stackQuery", "getVariantById");
       const options = { params: {uid : variant_uid}, action: 'getVariantById' };
       return this._connection.sendToParent('stackQuery', options).then(onData).catch(onError);
     }
@@ -295,6 +313,7 @@ class Stack {
       if (!uid) {
           return Promise.reject(new Error("uid is required"));
       }
+      this._registeredEvents.insertEvent("stackQuery", "getGlobalField");
       const options = { uid, params, action: "getGlobalField" };
       return this._connection
           .sendToParent("stackQuery", options)
@@ -314,6 +333,7 @@ class Stack {
     ): Promise<{ [key: string]: GenericObjectType }> {
         const optionParams = params;
         optionParams.query = query;
+        this._registeredEvents.insertEvent("stackQuery", "getGlobalFields");
         const options = { params: optionParams, action: "getGlobalFields" };
         return this._connection
             .sendToParent("stackQuery", options)

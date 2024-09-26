@@ -1,8 +1,10 @@
+import postRobot from 'post-robot';
 import Field from "../src/field";
 import testData from "./data/testData.json";
 import fileFieldData from "./data/fileField.json";
 import helpers from "./helpers";
 import EventEmitter from "wolfy87-eventemitter";
+import RegisterEvents from '../src/registerEvents';
 
 describe("Field", () => {
     let connection: { sendToParent: (...props: any[]) => any };
@@ -12,6 +14,7 @@ describe("Field", () => {
     let sendToParentError = function () {
         return Promise.reject("sample error");
     };
+    let registeredEvents: RegisterEvents;
 
     describe("Generic", () => {
         beforeEach(() => {
@@ -30,7 +33,13 @@ describe("Field", () => {
             jest.spyOn(connection, "sendToParent");
             jest.spyOn(emitter, "on");
             (testData as any).self = true;
-            field = new Field(testData as any, connection as any, emitter);
+            registeredEvents = new RegisterEvents({
+                connection: postRobot,
+                installationUID: "someInstallUID",
+                appUID: "someAppUID",
+                locationUID: "someLocation"
+            })
+            field = new Field(testData as any, connection as any, emitter,registeredEvents);
         });
 
         it("init", (done) => {
@@ -64,7 +73,8 @@ describe("Field", () => {
             let newField = new Field(
                 testData as any,
                 { sendToParent: sendToParentError } as any,
-                emitter
+                emitter,
+                registeredEvents
             );
             await expect((newField as any).setData()).rejects.toMatch(
                 "sample error"
@@ -99,12 +109,14 @@ describe("Field", () => {
             singleFileField = new Field(
                 fileFieldData.single as any,
                 connection as any,
-                emitter
+                emitter,
+                registeredEvents
             );
             multipleFileField = new Field(
                 fileFieldData.multiple as any,
                 connection as any,
-                emitter
+                emitter,
+                registeredEvents
             );
         });
 
@@ -115,12 +127,14 @@ describe("Field", () => {
             let emptySingleFileField = new Field(
                 clonedfileField.single,
                 connection as any,
-                emitter
+                emitter,
+                registeredEvents
             );
             let emptyMultipleFileField = new Field(
                 clonedfileField.multiple,
                 connection as any,
-                emitter
+                emitter,
+                registeredEvents
             );
             expect(emptySingleFileField.getData()).toBe(undefined);
             expect(emptyMultipleFileField.getData().length).toBe(0);

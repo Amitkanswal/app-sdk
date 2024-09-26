@@ -8,6 +8,7 @@ import {
 } from "../types";
 import generateErrorMessages, { ERROR_MESSAGES } from "../utils/errorMessages";
 import { onData, onError } from "../utils/utils";
+import RegisterEvents from '../registerEvents';
 
 export declare interface AppConfigAdditionalData {
     currentBranch: string;
@@ -21,24 +22,27 @@ export class AppConfig {
     _data: IAppConfigInitData;
     _connection: typeof postRobot;
     _emitter: EventEmitter;
+    _registerEvents: RegisterEvents;
     private _additionalData: AppConfigAdditionalData;
 
     constructor(
         data: IAppConfigInitData,
         connection: typeof postRobot,
         emitter: EventEmitter,
+        registerEvents: RegisterEvents,
         additionalData: AppConfigAdditionalData
     ) {
         this._data = data;
         this._connection = connection;
         this._emitter = emitter;
         this._additionalData = additionalData;
+        this._registerEvents = registerEvents;
 
         this.setValidity = this.setValidity.bind(this);
     }
 
     stack = () => {
-        return new Stack(this._data.stack, this._connection, {
+        return new Stack(this._data.stack, this._connection,this._registerEvents ,{
             currentBranch: this._additionalData.currentBranch,
         });
     };
@@ -46,6 +50,7 @@ export class AppConfig {
     setInstallationData = (
         installationData: IInstallationData
     ): Promise<IInstallationData> => {
+        this._registerEvents.insertEvent("appConfig", "setInstallationData");
         return this._connection
             .sendToParent<IInstallationData>(
                 "setInstallationData",
@@ -56,6 +61,7 @@ export class AppConfig {
     };
 
     getInstallationData = (): Promise<IInstallationData> => {
+        this._registerEvents.insertEvent("appConfig", "getInstallationData");
         return this._connection
             .sendToParent<IInstallationData>("getInstallationData")
             .then(onData)
@@ -88,7 +94,7 @@ export class AppConfig {
                 )
             );
         }
-
+        this._registerEvents.insertEvent("configPage", "setValidity");
         await this._connection
             .sendToParent("setValidity", { isValid, options })
             .then(onData)

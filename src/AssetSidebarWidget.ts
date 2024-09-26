@@ -4,6 +4,7 @@ import postRobot from "post-robot";
 import Asset from "./stack/api/asset";
 import { Asset as AssetType } from "./types/stack.types";
 import { GenericObjectType } from "./types/common.types";
+import RegisterEvents from './registerEvents';
 
 /** Class representing an Asset Sidebar UI Location from Contentstack UI.  */
 
@@ -16,11 +17,13 @@ class AssetSidebarWidget {
     _emitter: EventEmitter;
     _connection: typeof postRobot;
     _changedData?: GenericObjectType;
+    _registerEvents: RegisterEvents;
 
     constructor(
         initializationData: IAssetSidebarInitData,
         connection: typeof postRobot,
-        emitter: EventEmitter
+        emitter: EventEmitter,
+        registerEvents: RegisterEvents
     ) {
         /**
          * Gets the content type of the current asset.
@@ -32,6 +35,8 @@ class AssetSidebarWidget {
         this._emitter = emitter;
 
         this._connection = connection;
+
+        this._registerEvents = registerEvents;
 
         const thisAsset = this;
 
@@ -68,6 +73,7 @@ class AssetSidebarWidget {
      * @returns {Promise<void>} A promise that resolves when the data is set successfully.
      */
     async setData(asset: Partial<setAssetDto>): Promise<void> {
+        this._registerEvents.insertEvent("asset","setData");
         await this._connection.sendToParent("setData", asset);
     }
 
@@ -76,6 +82,7 @@ class AssetSidebarWidget {
      * @returns {Promise<void>} A promise that resolves when the synchronization is complete.
      */
     async syncAsset(): Promise<void> {
+        this._registerEvents.insertEvent("asset","syncAsset");
         await this._connection.sendToParent("syncAsset");
     }
 
@@ -89,6 +96,7 @@ class AssetSidebarWidget {
         if (typeof width !== "number") {
             throw new Error("Width must be a number");
         }
+        this._registerEvents.insertEvent("asset","updateAssetSidebarWidth");
         await this._connection.sendToParent(
             "updateAssetSidebarWidth",
             width as any
@@ -102,6 +110,7 @@ class AssetSidebarWidget {
      */
     async replaceAsset(file: File): Promise<void> {
         const asset = Asset(this._emitter);
+        this._registerEvents.insertEvent("asset","replace");
         await asset.handleUpload([file], "replace");
     }
 
@@ -113,6 +122,7 @@ class AssetSidebarWidget {
     onSave(callback: (arg0: AssetType) => void) {
         const assetObj = this;
         if (callback && typeof callback === "function") {
+            this._registerEvents.insertEvent("extensionEvent","assetSave");
             assetObj._emitter.on("assetSave", (event: { data: any }) => {
                 callback(event.data);
             });
@@ -129,6 +139,7 @@ class AssetSidebarWidget {
     onChange(callback: (arg0: AssetType) => void) {
         const assetObj = this;
         if (callback && typeof callback === "function") {
+            this._registerEvents.insertEvent("extensionEvent","assetChange");
             assetObj._emitter.on(
                 "assetChange",
                 (event: { data: AssetType }) => {
@@ -148,6 +159,7 @@ class AssetSidebarWidget {
     onPublish(callback: (arg0: AssetType) => void) {
         const assetObj = this;
         if (callback && typeof callback === "function") {
+            this._registerEvents.insertEvent("extensionEvent","assetPublish");
             assetObj._emitter.on(
                 "assetPublish",
                 (event: { data: AssetType }) => {
@@ -167,6 +179,7 @@ class AssetSidebarWidget {
     onUnPublish(callback: (arg0: AssetType) => void) {
         const assetObj = this;
         if (callback && typeof callback === "function") {
+            this._registerEvents.insertEvent("extensionEvent","assetUnPublish");
             assetObj._emitter.on(
                 "assetUnPublish",
                 (event: { data: AssetType }) => {

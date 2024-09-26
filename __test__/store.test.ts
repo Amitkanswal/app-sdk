@@ -1,3 +1,5 @@
+import RegisterEvents from '../src/registerEvents';
+import postRobot from 'post-robot';
 import Store from "../src/store";
 
 describe("Store", () => {
@@ -7,15 +9,22 @@ describe("Store", () => {
     let sendToParentError = function () {
         return Promise.reject(new Error("sample store error"));
     };
+    let registeredEvents: RegisterEvents
 
     beforeEach(function () {
         sendToParent = function () {
             return Promise.resolve({});
         };
-
         connection = { sendToParent: sendToParent };
         jest.spyOn(connection, "sendToParent");
-        storeObj = new Store(connection as any);
+        registeredEvents = new RegisterEvents({
+            connection: postRobot,
+            installationUID: "some",
+            appUID: "some",
+            locationUID: "some",
+        })
+        storeObj = new Store(connection as any,registeredEvents);
+
     });
 
     it("get", (done) => {
@@ -88,7 +97,7 @@ describe("Store", () => {
     it("errorCase", async () => {
         let storeWithError = new Store({
             sendToParent: sendToParentError,
-        } as any);
+        } as any, registeredEvents);
 
         await expect(() => storeWithError.remove("a")).rejects.toThrow(
             "sample store error"

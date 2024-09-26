@@ -1,3 +1,5 @@
+import RegisterEvents from '../src/registerEvents';
+import postRobot from 'post-robot';
 import Stack from "../src/stack";
 import { StackSearchQuery } from "../src/types/stack.types";
 import testData from "./data/testData.json";
@@ -11,6 +13,8 @@ describe("Stack", () => {
     let sendToParent: (...props: any[]) => any;
     let stack: Stack;
     let currentBranch: string;
+
+    let registeredEvents : RegisterEvents
 
     let sendToParentError = function () {
         return Promise.reject(new Error("sample error"));
@@ -28,9 +32,16 @@ describe("Stack", () => {
         connection = { sendToParent: sendToParent };
         jest.spyOn(connection, "sendToParent");
         currentBranch = "main_branch";
-        stack = new Stack(getStack(), connection, {
+        registeredEvents= new RegisterEvents({
+            connection: postRobot,
+            installationUID: "someInstall",
+            appUID: "someApp",
+            locationUID: "someLocation",
+        })
+        stack = new Stack(getStack(), connection,registeredEvents, {
             currentBranch: currentBranch,
         });
+        
     });
 
     describe("Stack Methods", () => {
@@ -167,6 +178,7 @@ describe("Stack", () => {
             let newStack = new Stack(
                 getStack(),
                 { sendToParent: sendToParentError },
+                registeredEvents,
                 { currentBranch: currentBranch }
             );
 
@@ -179,6 +191,7 @@ describe("Stack", () => {
             let newStack = new Stack(
                 getStack(),
                 { sendToParent: sendToParentAjaxCallError },
+                registeredEvents,
                 { currentBranch: currentBranch }
             );
 
@@ -205,6 +218,7 @@ describe("Stack", () => {
             let newStack = new Stack(
                 getStack(),
                 { sendToParent: sendToParentError },
+                registeredEvents,
                 { currentBranch: currentBranch }
             );
             await expect(() => newStack.getContentTypes()).rejects.toThrow(
@@ -216,6 +230,7 @@ describe("Stack", () => {
             let newStack = new Stack(
                 getStack(),
                 { sendToParent: sendToParentAjaxCallError },
+                registeredEvents,
                 { currentBranch: currentBranch }
             );
 
@@ -839,6 +854,7 @@ describe("Stack", () => {
             let newStack = new Stack(
                 getStack(),
                 { sendToParent: sendToParentAjaxCallError },
+                registeredEvents,
                 { currentBranch: currentBranch }
             );
 
@@ -851,6 +867,7 @@ describe("Stack", () => {
             let newStack = new Stack(
                 getStack(),
                 { sendToParent: sendToParentAjaxCallError },
+                registeredEvents,
                 { currentBranch: currentBranch }
             );
             await expect(() =>
@@ -1041,6 +1058,7 @@ describe("Stack", () => {
             let stack = new Stack(
                 getStack(),
                 { sendToParent: sendToParentError },
+                registeredEvents,
                 { currentBranch: currentBranch }
             );
 
@@ -1053,6 +1071,7 @@ describe("Stack", () => {
             let newStack = new Stack(
                 getStack(),
                 { sendToParent: sendToParentAjaxCallError },
+                registeredEvents,
                 { currentBranch: currentBranch }
             );
             await expect(newStack.getEnvironment("uid")).rejects.toThrow(
@@ -1078,6 +1097,7 @@ describe("Stack", () => {
             let newStack = new Stack(
                 getStack(),
                 { sendToParent: sendToParentError },
+                registeredEvents,
                 { currentBranch: currentBranch }
             );
             await expect(newStack.getEnvironments()).rejects.toThrow(
@@ -1089,6 +1109,7 @@ describe("Stack", () => {
             let newStack = new Stack(
                 getStack(),
                 { sendToParent: sendToParentAjaxCallError },
+                registeredEvents,
                 { currentBranch: currentBranch }
             );
             await expect(newStack.getEnvironments()).rejects.toThrow(
@@ -1128,6 +1149,7 @@ describe("Stack", () => {
             let newStack = new Stack(
                 getStack(),
                 { sendToParent: sendToParentAjaxCallError },
+                registeredEvents,
                 { currentBranch: currentBranch }
             );
             await expect(newStack.Asset("bltasssss").fetch()).rejects.toThrow(
@@ -1419,6 +1441,7 @@ describe("Stack", () => {
             let newStack = new Stack(
                 getStack(),
                 { sendToParent: sendToParentAjaxCallError },
+                registeredEvents,
                 { currentBranch: currentBranch }
             );
             await expect(() =>
@@ -1554,6 +1577,7 @@ describe("Stack", () => {
             let newStack = new Stack(
                 getStack(),
                 { sendToParent: sendToParentError },
+                registeredEvents,
                 { currentBranch: currentBranch }
             );
 
@@ -1566,6 +1590,7 @@ describe("Stack", () => {
             let newStack = new Stack(
                 getStack(),
                 { sendToParent: sendToParentAjaxCallError },
+                registeredEvents,
                 { currentBranch: currentBranch }
             );
 
@@ -1592,6 +1617,7 @@ describe("Stack", () => {
             let newStack = new Stack(
                 getStack(),
                 { sendToParent: sendToParentError },
+                registeredEvents,
                 { currentBranch: currentBranch }
             );
 
@@ -1602,6 +1628,7 @@ describe("Stack", () => {
             let newStack = new Stack(
                 getStack(),
                 { sendToParent: sendToParentAjaxCallError },
+                registeredEvents,
                 { currentBranch: currentBranch }
             );
 
@@ -1624,7 +1651,7 @@ describe("Stack", () => {
             // @ts-ignore
             delete stackData.branches;
 
-            stack = new Stack(stackData, connection, {
+            stack = new Stack(stackData, connection,registeredEvents, {
                 currentBranch: "",
             });
 
@@ -1644,7 +1671,7 @@ describe("Stack", () => {
             // @ts-ignore
             delete stackData.branches;
 
-            stack = new Stack(stackData, connection, {
+            stack = new Stack(stackData, connection,registeredEvents, {
                 currentBranch: "random_branch",
             });
 

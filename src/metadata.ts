@@ -2,6 +2,7 @@ import postRobot from "post-robot";
 
 import { GenericObjectType } from "./types/common.types";
 import { onData, onError } from "./utils/utils";
+import RegisterEvents from './registerEvents';
 
 export declare interface IMetadata {
     api_key: string;
@@ -48,7 +49,10 @@ const metadataActionTypes = {
  * The Metadata class provides methods for creating, retrieving, updating, and deleting metadata.
  */
 class Metadata {
-    constructor(private _connection: typeof postRobot) {}
+    _registerEvents: RegisterEvents;
+    constructor(private _connection: typeof postRobot, registerEvents:RegisterEvents) {
+        this._registerEvents = registerEvents;
+    }
 
     /**
      * Creates a new Metadata record.
@@ -70,6 +74,7 @@ class Metadata {
                 },
             },
         };
+        this._registerEvents.insertEvent("stackQuery", "createMetadata");
 
         return this._connection
             .sendToParent<{ metadata: IMetadata }>("stackQuery", data)
@@ -96,7 +101,7 @@ class Metadata {
                 },
             },
         };
-
+        this._registerEvents.insertEvent("stackQuery", "retrieveMetadata");
         return this._connection
             .sendToParent<{ metadata: IMetadata }>("stackQuery", data)
             .then(onData)
@@ -115,7 +120,7 @@ class Metadata {
             action: metadataActionTypes.retrieveAllMetadata,
             params,
         };
-
+        this._registerEvents.insertEvent("stackQuery", "retrieveAllMetadata");
         return this._connection
             .sendToParent<{ metadata: IMetadata[] }>("stackQuery", data)
             .then(onData)
@@ -142,7 +147,7 @@ class Metadata {
                 },
             },
         };
-
+        this._registerEvents.insertEvent("stackQuery", "updateMetadata");
         return this._connection
             .sendToParent<{ metadata: IMetadata }>("stackQuery", data)
             .then(onData)
@@ -168,6 +173,7 @@ class Metadata {
                 },
             },
         };
+        this._registerEvents.insertEvent("stackQuery", "deleteMetadata");
         return this._connection
             .sendToParent<{ notice: string }>("stackQuery", data)
             .then(onData)

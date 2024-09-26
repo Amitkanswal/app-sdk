@@ -1,6 +1,8 @@
 import EventEmitter from "wolfy87-eventemitter";
+import postRobot from 'post-robot';
 import { AppConfig } from "../src/appConfig";
 import { ERROR_MESSAGES } from "../src/utils/errorMessages";
+import RegisterEvents from '../src/registerEvents';
 
 describe("app config", () => {
     const mockConnection = {
@@ -10,10 +12,17 @@ describe("app config", () => {
     const mockData = {
         stack: {},
     };
+    const registeredEvents = new RegisterEvents({
+        connection: postRobot,
+        installationUID: "someInstallUID",
+        appUID: "someAppUID",
+        locationUID: "someLocation"
+    })
     const appConfig: AppConfig = new AppConfig(
         mockData as any,
         mockConnection as any,
         mockEmitter,
+        registeredEvents,
         { currentBranch: "master" }
     );
 
