@@ -172,7 +172,7 @@ class Field {
     onChange?(callback: (data: any) => any) {
         const fieldObj = this;
         if (callback && typeof callback === "function") {
-            this._registerEvents.insertEvent("field","extensionFieldChange");
+            this._registerEvents.insertEvent("extensionEvent","extensionFieldChange");
             fieldObj._emitter.on("extensionFieldChange", (event: any) => {
                 this._data = event.data;
                 this._resolvedData = event.data;

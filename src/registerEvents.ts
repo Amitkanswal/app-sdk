@@ -9,6 +9,7 @@ class RegisterEvents {
     appUID: string;
     locationUID: string;
     private debounceTimeout: number = 0;
+    private localStorageKey: string;
 
     constructor({
         connection,
@@ -25,6 +26,10 @@ class RegisterEvents {
         this.installationUID = installationUID;
         this.appUID = appUID;
         this.locationUID = locationUID;
+        this.localStorageKey = `events_${this.installationUID}_${this.appUID}_${this.locationUID}`;
+
+        // Load events from localStorage
+        this.loadEventsFromLocalStorage();
 
         // Subscribe to the eventsSubject to handle changes
         this.eventsSubject.subscribe({
@@ -38,28 +43,43 @@ class RegisterEvents {
         const serializedEvents = Object.fromEntries(
             Object.entries(events).map(([key, value]) => [key, Array.from(value)])
         );
-        
+
+        // Save events to localStorage
+        this.saveEventsToLocalStorage(serializedEvents);
+
         this._connection.sendToParent("registeredEvents", {
             [this.installationUID]: {
                 appUID: this.appUID,
                 registeredEvents: {
-                  [this.locationUID] : JSON.parse(JSON.stringify(serializedEvents)),
+                    [this.locationUID]: JSON.parse(JSON.stringify(serializedEvents)),
                 },
                 action,
             },
         });
     }
 
-    insertEvent(eventName: string, eventType: string) {
+    private saveEventsToLocalStorage(events: { [key: string]: string[] }) {
+        localStorage.setItem(this.localStorageKey, JSON.stringify(events));
+    }
 
+    private loadEventsFromLocalStorage() {
+        const storedEvents = localStorage.getItem(this.localStorageKey);
+        if (storedEvents) {
+            const parsedEvents = JSON.parse(storedEvents);
+            this.events = Object.fromEntries(
+                Object.entries(parsedEvents).map(([key, value]) => [key, new Set(value)])
+            );
+        }
+    }
+
+    insertEvent(eventName: string, eventType: string) {
         if (!this.events[eventName]) {
             this.events[eventName] = new Set();
         }
         if (!this.hasEvent(eventName, eventType)) {
             this.events[eventName].add(eventType);
-            this.eventsSubject.next({ events: this.events, action: "insert" }); 
+            this.eventsSubject.next({ events: this.events, action: "insert" });
         }
-      
     }
 
     hasEvent(eventName: string, eventType: string) {
@@ -77,7 +97,6 @@ class RegisterEvents {
                 this.eventsSubject.next({ events: this.events, action: "remove" });
             }
         }
-
     }
 
     getRegisterEvents() {

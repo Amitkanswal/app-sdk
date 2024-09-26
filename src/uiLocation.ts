@@ -374,7 +374,6 @@ class UiLocation {
                         { data: event.data.data },
                     ]);
                 }
-                // this.registeredEvents();
             });
         } catch (err) {
             console.error("Extension Event", err);
