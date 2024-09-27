@@ -138,7 +138,7 @@ class UiLocation {
             connection: this.postRobot,
             installationUID: this.installationUID,
             appUID: this.appUID,
-            locationUID: this.locationUID,
+            locationUID: this.type,
         });
 
         this.store = new Store(postRobot, this.eventRegistry);

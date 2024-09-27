@@ -40,9 +40,7 @@ class RegisterEvents {
     }
 
     private onChange(events: { [key: string]: Set<string> }, action: string) {
-        const serializedEvents = Object.fromEntries(
-            Object.entries(events).map(([key, value]) => [key, Array.from(value)])
-        );
+        const serializedEvents = this.serializeEvents(events);
 
         // Save events to localStorage
         this.saveEventsToLocalStorage(serializedEvents);
@@ -51,7 +49,7 @@ class RegisterEvents {
             [this.installationUID]: {
                 appUID: this.appUID,
                 registeredEvents: {
-                    [this.locationUID]: JSON.parse(JSON.stringify(serializedEvents)),
+                    [this.locationUID]: serializedEvents,
                 },
                 action,
             },
@@ -66,10 +64,20 @@ class RegisterEvents {
         const storedEvents = localStorage.getItem(this.localStorageKey);
         if (storedEvents) {
             const parsedEvents = JSON.parse(storedEvents);
-            this.events = Object.fromEntries(
-                Object.entries(parsedEvents).map(([key, value]) => [key, new Set(value)])
-            );
+            this.events = this.deserializeEvents(parsedEvents);
         }
+    }
+
+    private serializeEvents(events: { [key: string]: Set<string> }): { [key: string]: string[] } {
+        return Object.fromEntries(
+            Object.entries(events).map(([key, value]) => [key, Array.from(value)])
+        );
+    }
+
+    private deserializeEvents(events: { [key: string]: string[] }): { [key: string]: Set<string> } {
+        return Object.fromEntries(
+            Object.entries(events).map(([key, value]) => [key, new Set(value)])
+        );
     }
 
     insertEvent(eventName: string, eventType: string) {
